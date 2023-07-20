@@ -2,10 +2,10 @@
 Calendar-Backend is the backend application developed using Node.js, serving as the server-side component for the Calendar-Frontend project. This backend handles data storage, retrieval, and processing required for the calendar application.
 
 ## Table of Contents
-Getting Started
-Prerequisites
-Installation
-Usage
+- Getting Started
+- Prerequisites
+- Installation
+- Usage
 
 ## Getting Started
 Welcome to Calendar-Backend! This project serves as the backend for the Calendar-Frontend application, which is built using Node.js.
