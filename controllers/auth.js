@@ -1,9 +1,10 @@
 const { response } = require("express");
 const bcrypt = require("bcryptjs");
 const User = require("../models/User");
+const { generateJWT } = require("../helpers/jwt");
 
 const createUser = async (req, res = response) => {
-    const { name, email, password } = req.body;
+    const { email, password } = req.body;
 
     try {
         let user = await User.findOne({ email });
@@ -23,33 +24,75 @@ const createUser = async (req, res = response) => {
 
         await user.save();
 
+        //Generate JWT
+        const token = await generateJWT(user.id, user.name);
+
         res.status(201).send({
             ok: true,
             uid: user.id,
             name: user.name,
+            token,
         });
     } catch (error) {
         console.log(error.message);
         res.status(500).send({
             ok: false,
-            msg: "Email already exists",
+            msg: "Error creating user",
         });
     }
 };
 
-const login = (req, res = response) => {
+const login = async (req, res = response) => {
     const { email, password } = req.body;
 
-    res.send({
-        ok: true,
-        msg: "login",
-        email,
-        password,
-    });
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).send({
+                ok: false,
+                msg: "User and password do not match",
+            });
+        }
+
+        //Confirm password
+        const validPassword = bcrypt.compareSync(password, user.password);
+
+        if (!validPassword) {
+            return res.status(400).send({
+                ok: false,
+                msg: "User and password do not match",
+            });
+        }
+
+        //Generate JWT
+        const token = await generateJWT(user.id, user.name);
+
+        res.send({
+            ok: true,
+            uid: user.id,
+            name: user.name,
+            token,
+        });
+    } catch (error) {
+        console.log(error.message);
+        res.status(500).send({
+            ok: false,
+            msg: "Error logging in",
+        });
+    }
 };
 
-const renewToken = (req, res = response) => {
-    res.send({ ok: true, msg: "renew" });
+const renewToken = async (req, res = response) => {
+    const {uid, name} = req;
+
+    //Generate JWT
+    const token = await generateJWT(uid, name);
+
+    res.send({ 
+        ok: true,
+        token
+    });
 };
 
 module.exports = { createUser, login, renewToken };
